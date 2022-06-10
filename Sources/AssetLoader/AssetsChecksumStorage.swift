@@ -22,18 +22,18 @@ extension AssetsChecksumStorage {
     }
 }
 
-public class AssetsUserDefaultsChecksumStorage {
+public class AssetsUserDefaultsChecksumStorage: AssetsChecksumStorage {
     private let storage: UserDefaults
     
-    init(storage: UserDefaults) {
+    public init(storage: UserDefaults) {
         self.storage = storage
     }
     
-    func getValue(key: String) -> String? {
+    public func getValue(key: String) -> String? {
         storage.string(forKey: key)
     }
     
-    func setValue(_ value: String?, key: String) {
+    public func setValue(_ value: String?, key: String) {
         storage.set(value, forKey: key)
     }    
 }
