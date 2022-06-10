@@ -22,18 +22,23 @@ public class AssetLoader {
         
     private var loadings = [Loading]()
     private let checksumStorage: AssetsChecksumStorage
-    private let workQueue = DispatchQueue(label: "AssetLoadersStorageQueue")
+    private let syncQueue = DispatchQueue(label: "AssetLoadersStorageQueue")
     private let remoteLoader: RemoteLoader.Type
     private let fileManager: FileManager
+    private let workQueue: DispatchQueue
     
-    public init(checksumStorage: AssetsChecksumStorage, remoteLoader: RemoteLoader.Type, fileManager: FileManager = .default) {
+    public init(checksumStorage: AssetsChecksumStorage,
+                remoteLoader: RemoteLoader.Type,
+                fileManager: FileManager = .default,
+                workQueue: DispatchQueue = .global()) {
         self.checksumStorage = checksumStorage
         self.remoteLoader = remoteLoader
         self.fileManager = fileManager
+        self.workQueue = workQueue
     }
     
     public func loadAsset(_ asset: Asset, observer: AssetLoaderObserver) {
-        workQueue.async {
+        syncQueue.async {
             if let loading = self.findLoading(for: asset) {
                 loading.observers.append(observer)
             } else {
@@ -41,10 +46,10 @@ public class AssetLoader {
                                     remoteLoaderType: self.remoteLoader,
                                     checksumStorage: self.checksumStorage,
                                     fileManager: self.fileManager) { [unowned self] result in
-                    self.workQueue.async {
+                    self.syncQueue.async {
                         let loading = self.findLoading(for: asset)!
                         loading.observers.forEach { observer in
-                            DispatchQueue.global().async {
+                            self.workQueue.async {
                                 observer.assetWasLoaded(result)
                             }
                         }
@@ -54,7 +59,7 @@ public class AssetLoader {
 
                 self.loadings.append(Loading(asset: asset, loader: loader, observer: observer))
                 
-                DispatchQueue.global().async {
+                self.workQueue.async {
                     loader.load()
                 }
             }
