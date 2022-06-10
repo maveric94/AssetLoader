@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class ImageAssetObserver: BlockAssetLoaderObserver {
+public class ImageAssetObserver: BlockAssetLoaderObserver {
     public let completion: (Result<UIImage, Error>) -> Void
     
     public init(completion: @escaping (Result<UIImage, Error>) -> Void) {
